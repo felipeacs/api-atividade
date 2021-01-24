@@ -1,13 +1,38 @@
 from flask import Flask, request
+from flask_httpauth import HTTPBasicAuth
 from flask_restful import Resource, Api
 
-from models import Pessoas, Atividades
+from models import Pessoas, Atividades, Usuarios
 
+auth = HTTPBasicAuth()
 app = Flask(__name__)
 api = Api(app)
 
+"""
+# para uso de teste simples
+USUARIOS = {
+    'felipe': '123',
+    'augusto': '321'
+}
+
+@auth.verify_password
+def verificacao(login, senha):
+    if not (login, senha):
+        return False
+    return USUARIOS.get(login) == senha
+
+"""
+
+
+@auth.verify_password
+def verificacao(login, senha):
+    if not (login, senha):
+        return False
+    return Usuarios.query.filter_by(login=login, senha=senha).first()
+
 
 class Pessoa(Resource):
+    @auth.login_required
     def get(self, nome):
         try:
             pessoa = Pessoas.query.filter_by(nome=nome).first()
